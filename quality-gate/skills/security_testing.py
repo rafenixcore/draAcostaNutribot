@@ -44,9 +44,9 @@ def _parse_trufflehog_lines(lines: list[str]) -> list[dict]:
     """Parse trufflehog JSON output into [{'detector', 'file', 'verified'}].
 
     The file path lives under Data.Filesystem.file for filesystem scans and
-    under Data.file for other sources — both shapes are accepted. Lines that
-    are not JSON (or malformed JSON) are skipped so one bad line never
-    crashes the whole skill.
+    under Data.file for other sources — both shapes are accepted. A line that
+    is not JSON, malformed JSON, or schema-drifted (non-dict values where
+    dicts are expected) is skipped: the helper never raises.
     """
     findings = []
     for line in lines:
@@ -54,18 +54,18 @@ def _parse_trufflehog_lines(lines: list[str]) -> list[dict]:
             continue
         try:
             d = json.loads(line)
-        except json.JSONDecodeError:
+            data = (d.get("SourceMetadata") or {}).get("Data") or {}
+            file_ = (data.get("Filesystem") or {}).get("file") or data.get("file")
+            detector = d.get("DetectorName") or d.get("SecretType")
+            findings.append(
+                {
+                    "detector": detector,
+                    "file": file_,
+                    "verified": bool(d.get("Verified")),
+                }
+            )
+        except (json.JSONDecodeError, AttributeError, TypeError):
             continue
-        data = (d.get("SourceMetadata") or {}).get("Data") or {}
-        file_ = (data.get("Filesystem") or {}).get("file") or data.get("file")
-        detector = d.get("DetectorName") or d.get("SecretType")
-        findings.append(
-            {
-                "detector": detector,
-                "file": file_,
-                "verified": bool(d.get("Verified")),
-            }
-        )
     return findings
 
 
@@ -96,7 +96,11 @@ class SecretsSkill(Skill):
         # log records which secrets were accessed (names, not values).
         findings = _parse_trufflehog_lines(res.stdout.splitlines())
         for f in findings:
-            self._secret_log.append(f"{f['detector']}@{f['file']}" if f["file"] else f["detector"])
+            # detector missing → nothing meaningful to audit; never log "None"
+            if f["detector"]:
+                self._secret_log.append(
+                    f"{f['detector']}@{f['file']}" if f["file"] else f["detector"]
+                )
         return {"scope": "working-tree-only", "findings": findings, "image": image}
 
     def _extract_metrics(self, raw: dict) -> dict[str, float]:
