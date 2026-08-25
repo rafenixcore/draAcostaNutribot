@@ -39,6 +39,12 @@ def test_write_override_and_compose_cmd(tmp_path):
     assert cmd[cmd.index("--env-file") + 1].endswith(".env.qg")
 
 
+def test_override_without_env_has_no_environment_key(tmp_path):
+    for sandbox_env in (None, {}):
+        override = generate_app_override(tmp_path / "proj", sandbox_env=sandbox_env)
+        assert "environment" not in override["services"]["app"]
+
+
 def test_override_injects_sandbox_env(tmp_path):
     override = generate_app_override(
         tmp_path / "backend",

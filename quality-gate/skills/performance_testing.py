@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from orchestrator.core import RunContext
+from orchestrator.sandbox import SANDBOX_NETWORK
 from orchestrator.toolrunner import container_exec
 from skills.base import Skill
 
@@ -12,14 +13,18 @@ from skills.base import Skill
 def _sandbox_network_up() -> bool:
     import subprocess
 
-    return (
-        subprocess.run(
-            ["docker", "network", "inspect", "qg_sandbox"],
-            capture_output=True,
-            check=False,
-        ).returncode
-        == 0
-    )
+    try:
+        return (
+            subprocess.run(
+                ["docker", "network", "inspect", SANDBOX_NETWORK],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            ).returncode
+            == 0
+        )
+    except subprocess.TimeoutExpired:
+        return False  # daemon unresponsive → treat as down → SKIPPED
 
 
 class TrivySkill(Skill):
@@ -90,7 +95,7 @@ class K6Skill(Skill):
         out_dir = ctx.artifacts_dir / self.name
         out_dir.mkdir(parents=True, exist_ok=True)
         scripts = ctx.qg_root / "sandbox" / "k6"
-        network = "qg_sandbox"
+        network = SANDBOX_NETWORK
         results = {}
         failures = []
         for profile_name in ("smoke", "load"):

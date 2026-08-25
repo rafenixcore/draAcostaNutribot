@@ -53,3 +53,37 @@ def test_k6_skips_when_sandbox_down(tmp_path):
     with patch("skills.performance_testing._sandbox_network_up", return_value=False):
         result = K6Skill().run(_ctx(tmp_path))
     assert result.status.value == "SKIPPED"
+
+
+def test_k6_health_path_defaults_to_slash_health(tmp_path):
+    from skills.performance_testing import K6Skill
+
+    ctx = _ctx(tmp_path)  # no settings.json → sandbox config absent
+    out = tmp_path / "artifacts" / "performance"
+    out.mkdir(parents=True)
+    captured = {}
+
+    def fake_exec(image, cmd, cwd, mounts=None, env=None, network="none"):
+        captured["cmd"] = cmd
+        (out / "smoke.json").write_text(json.dumps({"p95_ms": 12}))
+        (out / "load.json").write_text(json.dumps({"p95_ms": 30}))
+        return ExecResult(0, "", "")
+
+    with patch("orchestrator.toolrunner.container_exec", side_effect=fake_exec):
+        with patch("skills.performance_testing._sandbox_network_up", return_value=True):
+            K6Skill().run(ctx)
+
+    assert "HEALTH_PATH=/health" in captured["cmd"]
+
+
+def test_sandbox_network_check_does_not_hang(tmp_path):
+    from skills.performance_testing import _sandbox_network_up
+
+    import subprocess
+
+    def slow(*args, **kwargs):
+        assert kwargs.get("timeout") is not None, "no timeout on docker network inspect"
+        raise subprocess.TimeoutExpired(cmd=args[0], timeout=kwargs["timeout"])
+
+    with patch("subprocess.run", side_effect=slow):
+        assert _sandbox_network_up() is False
