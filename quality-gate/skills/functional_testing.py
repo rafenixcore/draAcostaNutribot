@@ -29,8 +29,13 @@ class FunctionalTestingSkill(Skill):
         # its venv bin dir to an absolute binary path unchanged, so passing
         # the deps-venv coverage path uses exactly that interpreter.
         deps_python = ctx.qg_root / "artifacts" / "deps-venv" / "bin" / "python"
+        # Use the deps-venv coverage only when the binary actually exists:
+        # `qg setup` installs it best-effort, and a failed install must fall
+        # back to the gate venv's coverage rather than crash with ENOENT.
         coverage_bin = (
-            str(deps_python.parent / "coverage") if deps_python.exists() else "coverage"
+            str(deps_python.parent / "coverage")
+            if (deps_python.parent / "coverage").exists()
+            else "coverage"
         )
         run = venv_exec(
             [coverage_bin, "run", "-m", "pytest", "-q", "--tb=short", "."],

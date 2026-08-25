@@ -1,7 +1,7 @@
 // settings.json.example — configuración del quality gate (copiar a settings.json).
 // NOTA: settings.json se lee con JSON estricto; borra estos comentarios (//) al
-// copiar, o el loader descartará la configuración en silencio y el gate correrá
-// SIN guardas ni overrides (require_branch/require_clean/sandbox/app_root).
+// copiar, o el gate se negará a correr (exit INFRA) avisando por stderr — nunca
+// corre en silencio SIN guardas ni overrides (require_branch/require_clean/sandbox/app_root).
 {
   "project": {
     // app_root: directorio de la app analizada. En monorepos apunta a la

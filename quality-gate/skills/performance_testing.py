@@ -23,8 +23,11 @@ def _sandbox_network_up() -> bool:
             ).returncode
             == 0
         )
-    except subprocess.TimeoutExpired:
-        return False  # daemon unresponsive → treat as down → SKIPPED
+    except (subprocess.TimeoutExpired, OSError):
+        # TimeoutExpired: daemon unresponsive. OSError (e.g. FileNotFoundError
+        # when docker is not installed): docker missing. Either way the sandbox
+        # is down → SKIPPED, never an ERROR.
+        return False
 
 
 class TrivySkill(Skill):

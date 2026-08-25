@@ -87,3 +87,15 @@ def test_sandbox_network_check_does_not_hang(tmp_path):
 
     with patch("subprocess.run", side_effect=slow):
         assert _sandbox_network_up() is False
+
+
+def test_sandbox_network_down_when_docker_missing(tmp_path):
+    # No docker CLI on the host: FileNotFoundError must read as "network
+    # down" (skill reports SKIPPED), not crash the skill into ERROR.
+    from skills.performance_testing import _sandbox_network_up
+
+    def no_docker(*args, **kwargs):
+        raise FileNotFoundError("docker")
+
+    with patch("subprocess.run", side_effect=no_docker):
+        assert _sandbox_network_up() is False

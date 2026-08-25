@@ -258,6 +258,59 @@ def test_main_run_guard_require_clean_blocks(tmp_path, monkeypatch):
     assert called == []
 
 
+def test_main_run_malformed_settings_fails_closed(tmp_path, monkeypatch, capsys):
+    qg = tmp_path / "qg"
+    (qg / "config").mkdir(parents=True)
+    (qg / "config" / "triggers.yml").write_text("pre_production: []\n")
+    (qg / "config" / "rules.yml").write_text("rules: []\nskills: {}\n")
+    (qg / "artifacts").mkdir()
+    (qg / "settings.json").write_text("{not json")
+    _mkapp(tmp_path, "backend")
+    _git_repo(tmp_path)
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(cli, "QG_ROOT", qg)
+    called = []
+
+    def fake(ctx, trigger="pre_production"):
+        called.append(True)
+        return [], "PASS"
+
+    monkeypatch.setattr("orchestrator.run.run_gate", fake)
+    # malformed settings.json must fail CLOSED like a guard: INFRA exit,
+    # gate never runs, banner printed first, then the block message.
+    assert cli.main(["run"]) == 2
+    assert called == []
+    out = capsys.readouterr().out
+    assert out.index("WARNING: analyzing") < out.index("blocked:")
+    assert "invalid JSON" in out
+
+
+def test_main_run_valid_settings_passes_through(tmp_path, monkeypatch):
+    qg = tmp_path / "qg"
+    (qg / "config").mkdir(parents=True)
+    (qg / "config" / "triggers.yml").write_text("pre_production: []\n")
+    (qg / "config" / "rules.yml").write_text("rules: []\nskills: {}\n")
+    (qg / "artifacts").mkdir()
+    # valid settings.json — guards still apply, run proceeds on the
+    # authorized branch instead of being blocked by the settings loader.
+    (qg / "settings.json").write_text(
+        '{"project": {"require_branch": ["main"]}}'
+    )
+    _mkapp(tmp_path, "backend")
+    _git_repo(tmp_path)
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(cli, "QG_ROOT", qg)
+    called = []
+
+    def fake(ctx, trigger="pre_production"):
+        called.append(True)
+        return [], "PASS"
+
+    monkeypatch.setattr("orchestrator.run.run_gate", fake)
+    assert cli.main(["run"]) == 0
+    assert called == [True]
+
+
 def _provision_env(tmp_path):
     """Scaffold a discoverable project + gate dir with a profile for setup."""
     qg = tmp_path / "qg"

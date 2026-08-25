@@ -95,3 +95,17 @@ def test_guard_require_clean_string_false_is_off():
     fp = {"in_git": True, "branch": "main", "dirty": True}
     # hand-edit mistake: string "false" instead of boolean — must NOT block
     assert check_run_guards(fp, _settings(require_clean="false")) is None
+
+
+def test_guard_require_branch_int_fails_closed_cleanly():
+    fp = {"in_git": True, "branch": "dev", "dirty": False}
+    # hand-edit mistake: require_branch: 123 — must block with a clean
+    # message, never raise a raw TypeError traceback.
+    err = check_run_guards(fp, _settings(require_branch=123))
+    assert err and "require_branch" in err and "expected string or list" in err
+
+
+def test_guard_require_branch_non_string_list_entry_fails_closed():
+    fp = {"in_git": True, "branch": "dev", "dirty": False}
+    err = check_run_guards(fp, _settings(require_branch=["dev", 123]))
+    assert err and "require_branch" in err and "expected string or list" in err

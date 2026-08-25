@@ -48,11 +48,17 @@ def _analyze_and_guard() -> dict | None:
     Returns the fingerprint, or None when a guard blocked the run
     (message already printed).
     """
-    from orchestrator.discovery import load_project_settings
+    from orchestrator.discovery import load_project_settings, settings_error
     from orchestrator.gitinfo import check_run_guards, git_fingerprint, state_banner
 
     analyzed = git_fingerprint(PROJECT_ROOT)
     print(state_banner(analyzed))
+    # A malformed settings.json must fail CLOSED before anything runs:
+    # running with silently-empty settings means no guards at all.
+    err = settings_error(QG_ROOT)
+    if err:
+        print(f"blocked: {err}")
+        return None
     # load_project_settings returns the "project" subset; check_run_guards
     # expects the full settings shape with a "project" key.
     err = check_run_guards(analyzed, {"project": load_project_settings(QG_ROOT)})

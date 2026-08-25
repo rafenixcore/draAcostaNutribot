@@ -51,12 +51,21 @@ def check_run_guards(analyzed: dict, settings: dict) -> str | None:
     "require_clean": bool}}``. Hand-edit mistakes are normalized so a
     guard never fails open: a bare string ``require_branch`` is treated
     as a one-element list, and only the boolean ``True`` enables
-    ``require_clean`` (string ``"false"`` does not).
+    ``require_clean`` (string ``"false"`` does not). A ``require_branch``
+    that is neither a string nor a list of strings is a misconfiguration
+    and blocks the run with a clean error instead of raising.
     """
     project = settings.get("project", {}) or {}
     require_branch = project.get("require_branch") or []
     if isinstance(require_branch, str):
         require_branch = [require_branch]
+    elif not isinstance(require_branch, list) or not all(
+        isinstance(b, str) for b in require_branch
+    ):
+        return (
+            "misconfigured require_branch in settings.json: expected "
+            "string or list"
+        )
     require_clean = project.get("require_clean") is True
     if require_branch and not analyzed["in_git"]:
         return "require_branch is set but this is not a git repository"

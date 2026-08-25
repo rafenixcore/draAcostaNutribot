@@ -15,7 +15,8 @@ qg discover
 cp settings.json.example settings.json
 #     → require_branch: ramas autorizadas; require_clean: bloquea cambios sin commitear
 #     OJO: settings.json se lee con JSON estricto — si lo copias con comentarios //,
-#     la configuración se descarta en silencio y el gate corre SIN guardas.
+#     el gate se NIEGA a correr (exit INFRA) y avisa por stderr; nunca corre
+#     en silencio sin guardas.
 # 3. Preparar el entorno (venv de tools + sandbox si hay Dockerfile)
 qg setup
 # 4. Ejecutar el gate
@@ -105,7 +106,8 @@ con las deps de la app.
 
 El venv del gate (herramientas fijadas: ruff, black, pytest, coverage, semgrep,
 pip-audit) **nunca** se toca con los requirements del proyecto.
-`functional_testing` usa el intérprete de `deps-venv` cuando existe y cae al venv
+`functional_testing` usa el binario de `coverage` de `deps-venv` cuando existe
+(la instalación de coverage en `deps-venv` es best-effort) y cae al del venv
 del gate en caso contrario. Todas las fallas de provisioning del venv son
 best-effort (avisos; el setup continúa) — la única que aborta es el
 `docker compose up -d` del sandbox, que devuelve exit INFRA.

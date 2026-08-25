@@ -49,13 +49,19 @@ def test_functional_metrics_and_redirection(tmp_path):
     assert "-p no:cacheprovider" in captured["env"]["PYTEST_ADDOPTS"]
 
 
-def test_functional_prefers_deps_venv_binaries_when_present(tmp_path):
-    qg = tmp_path / "qg"
-    (qg / "config").mkdir(parents=True)
-    (qg / "config" / "rules.yml").write_text("rules: []\nskills: {}\n")
+def _deps_bin(qg):
     deps_bin = qg / "artifacts" / "deps-venv" / "bin"
     deps_bin.mkdir(parents=True)
     (deps_bin / "python").write_text("")
+    return deps_bin
+
+
+def test_functional_prefers_deps_venv_coverage_when_installed(tmp_path):
+    qg = tmp_path / "qg"
+    (qg / "config").mkdir(parents=True)
+    (qg / "config" / "rules.yml").write_text("rules: []\nskills: {}\n")
+    deps_bin = _deps_bin(qg)
+    (deps_bin / "coverage").write_text("")
     ctx = RunContext(
         project_root=tmp_path,
         qg_root=qg,
@@ -77,4 +83,36 @@ def test_functional_prefers_deps_venv_binaries_when_present(tmp_path):
     assert cmds[0][0] == str(deps_bin / "coverage")
     assert cmds[0][1] == "run"
     assert cmds[1][0] == str(deps_bin / "coverage")
+    assert cmds[1][1] == "json"
+
+
+def test_functional_falls_back_to_gate_venv_when_deps_venv_missing_coverage(
+    tmp_path,
+):
+    # `qg setup` provisions the deps venv best-effort: python may exist
+    # while the coverage install failed. The skill must fall back to the
+    # gate venv's coverage instead of crashing on a missing binary.
+    qg = tmp_path / "qg"
+    (qg / "config").mkdir(parents=True)
+    (qg / "config" / "rules.yml").write_text("rules: []\nskills: {}\n")
+    _deps_bin(qg)  # python only — no coverage binary
+    ctx = RunContext(
+        project_root=tmp_path,
+        qg_root=qg,
+        artifacts_dir=qg / "artifacts",
+        reports_dir=qg / "reports",
+    )
+    cmds = []
+
+    def spy(cmd, cwd, extra_env=None):
+        cmds.append(cmd)
+        return _fake_run(cmd, cwd, extra_env)
+
+    with patch("skills.functional_testing.venv_exec", side_effect=spy):
+        res = FunctionalTestingSkill().run(ctx)
+    assert res.metrics["coverage.line_percent"] == 92.5
+    assert len(cmds) == 2
+    assert cmds[0][0] == "coverage"
+    assert cmds[0][1] == "run"
+    assert cmds[1][0] == "coverage"
     assert cmds[1][1] == "json"
