@@ -11,6 +11,11 @@ reglas determinista (`config/rules.yml`).
 # 2. Inicializar y descubrir el stack
 qg init
 qg discover
+# 2b. Copiar y ajustar la configuración (obligatorio si quieres las guardas de rama)
+cp settings.json.example settings.json
+#     → require_branch: ramas autorizadas; require_clean: bloquea cambios sin commitear
+#     OJO: settings.json se lee con JSON estricto — si lo copias con comentarios //,
+#     la configuración se descarta en silencio y el gate corre SIN guardas.
 # 3. Preparar el entorno (venv de tools + sandbox si hay Dockerfile)
 qg setup
 # 4. Ejecutar el gate
@@ -39,7 +44,7 @@ veredicto nunca se decide sobre un directorio equivocado en silencio.
 | Herramienta | Layer | Aislamiento | Efectos sobre el proyecto analizado |
 |---|---|---|---|
 | ruff, black, semgrep, pip-audit | venv uv | Blando: proceso aislado, network del host, FS del proyecto en lectura | no escriben nada |
-| pytest + coverage | venv uv — deps-venv si `qg setup` lo provisionó (si no, venv del gate) | Blando, única escritura permitida: `COVERAGE_FILE` y `.pytest_cache` redirigidos a `artifacts/` | cero rastros |
+| pytest + coverage | venv uv — deps-venv si `qg setup` lo provisionó (si no, venv del gate) | Blando, única escritura permitida: `COVERAGE_FILE` redirigido a `artifacts/`; pytest corre con `-p no:cacheprovider` (no se crea `.pytest_cache`) | cero rastros |
 | trivy, k6, truffleHog | container | Duro: imagen con digest fijo, código montado read-only, red del sandbox | nada |
 
 **Asimetría de aislamiento (v0.1):** la tool layer es híbrida a propósito — los tooling de
@@ -98,11 +103,12 @@ declaradas del proyecto analizado (`-r artifacts/project-requirements.txt`, desd
 el perfil descubierto) y `coverage`. Así `functional_testing` corre la suite real
 con las deps de la app.
 
-El venv del gate (herramientas fijadas: ruff, pytest, coverage, semgrep, pip-audit)
-**nunca** se toca con los requirements del proyecto. `functional_testing` usa el
-intérprete de `deps-venv` cuando existe y cae al venv del gate en caso contrario.
-Todas las fallas de provisioning son best-effort: se avisan como warnings y
-`qg setup` termina con exit 0.
+El venv del gate (herramientas fijadas: ruff, black, pytest, coverage, semgrep,
+pip-audit) **nunca** se toca con los requirements del proyecto.
+`functional_testing` usa el intérprete de `deps-venv` cuando existe y cae al venv
+del gate en caso contrario. Todas las fallas de provisioning del venv son
+best-effort (avisos; el setup continúa) — la única que aborta es el
+`docker compose up -d` del sandbox, que devuelve exit INFRA.
 
 ## Uso para agentes
 

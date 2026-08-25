@@ -1,8 +1,11 @@
 // settings.json.example — configuración del quality gate (copiar a settings.json).
 // NOTA: settings.json se lee con JSON estricto; borra estos comentarios (//) al
-// copiar, o el loader descartará la configuración en silencio.
+// copiar, o el loader descartará la configuración en silencio y el gate correrá
+// SIN guardas ni overrides (require_branch/require_clean/sandbox/app_root).
 {
   "project": {
+    // app_root: directorio de la app analizada. En monorepos apunta a la
+    // subcarpeta (p. ej. "backend"); gana sobre la heurística de detección.
     "app_root": ".",
     // require_branch: lista de ramas en las que el gate puede correr. Si la rama
     // actual no está listada, qg run / qg run-skill se bloquean (exit INFRA) antes
@@ -22,6 +25,8 @@
       }
     }
   },
+  // No lo lee el gate: whitelist de comandos para el permiso del agente
+  // anfitrión (ver AGENTS.md).
   "permissions": {
     "allow": [
       "Bash(qg init:*)",
