@@ -38,3 +38,11 @@ def test_fingerprint_dirty_tree(tmp_path):
 def test_fingerprint_non_git(tmp_path):
     fp = git_fingerprint(tmp_path)
     assert fp == {"in_git": False, "branch": None, "commit": None, "dirty": None}
+
+
+def test_fingerprint_detached_head(tmp_path):
+    _git_repo(tmp_path)
+    subprocess.run(["git", "checkout", "-q", "--detach"], cwd=tmp_path, check=True)
+    fp = git_fingerprint(tmp_path)
+    assert fp["branch"] == "(detached)"
+    assert fp["commit"]

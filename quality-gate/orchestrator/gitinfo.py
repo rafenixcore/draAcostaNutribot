@@ -13,6 +13,7 @@ def _git(cwd: Path, args: list[str]) -> str | None:
             cwd=cwd,
             capture_output=True,
             text=True,
+            errors="replace",
             timeout=10,
             check=False,
         )
@@ -22,7 +23,11 @@ def _git(cwd: Path, args: list[str]) -> str | None:
 
 
 def git_fingerprint(project_root: Path) -> dict:
-    """Branch / commit / dirtiness of the working tree under analysis."""
+    """Branch / commit / dirtiness of the working tree under analysis.
+
+    A failed git command and empty output are conflated: both fall back to
+    "(detached)", "(unknown)", and dirty=False.
+    """
     if _git(project_root, ["rev-parse", "--is-inside-work-tree"]) != "true":
         return {"in_git": False, "branch": None, "commit": None, "dirty": None}
     branch = _git(project_root, ["branch", "--show-current"]) or "(detached)"
