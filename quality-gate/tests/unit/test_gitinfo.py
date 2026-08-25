@@ -82,3 +82,16 @@ def test_guard_clean_dirty_fails():
 def test_guard_clean_clean_passes():
     fp = {"in_git": True, "branch": "main", "dirty": False}
     assert check_run_guards(fp, _settings(require_clean=True)) is None
+
+
+def test_guard_branch_string_is_normalized():
+    fp = {"in_git": True, "branch": "dev", "dirty": False}
+    # hand-edit mistake: bare string instead of a list — must still block
+    err = check_run_guards(fp, _settings(require_branch="develop"))
+    assert err and "develop" in err and "dev" in err
+
+
+def test_guard_require_clean_string_false_is_off():
+    fp = {"in_git": True, "branch": "main", "dirty": True}
+    # hand-edit mistake: string "false" instead of boolean — must NOT block
+    assert check_run_guards(fp, _settings(require_clean="false")) is None

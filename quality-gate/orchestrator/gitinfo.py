@@ -46,10 +46,18 @@ def check_run_guards(analyzed: dict, settings: dict) -> str | None:
 
     Guards are execution preconditions (config-driven), never quality
     metrics — they cannot influence the PASS/FAIL verdict.
+
+    Expected settings shape: ``{"project": {"require_branch": [...],
+    "require_clean": bool}}``. Hand-edit mistakes are normalized so a
+    guard never fails open: a bare string ``require_branch`` is treated
+    as a one-element list, and only the boolean ``True`` enables
+    ``require_clean`` (string ``"false"`` does not).
     """
     project = settings.get("project", {}) or {}
     require_branch = project.get("require_branch") or []
-    require_clean = bool(project.get("require_clean"))
+    if isinstance(require_branch, str):
+        require_branch = [require_branch]
+    require_clean = project.get("require_clean") is True
     if require_branch and not analyzed["in_git"]:
         return "require_branch is set but this is not a git repository"
     if require_branch and analyzed["branch"] not in require_branch:
@@ -65,6 +73,7 @@ def check_run_guards(analyzed: dict, settings: dict) -> str | None:
 
 
 def state_banner(analyzed: dict) -> str:
+    """One-line WARNING identifying the analyzed branch/commit state."""
     if not analyzed["in_git"]:
         return (
             "WARNING: not a git repository — the analyzed state cannot be "

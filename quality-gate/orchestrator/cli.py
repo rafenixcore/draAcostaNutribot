@@ -246,11 +246,10 @@ def cmd_cleanup(yes: bool) -> int:
     if not yes:
         print("cleanup removes artifacts/ and reports/; pass --yes to confirm")
         return ExitCodes.PASS
-    import shutil as _shutil
 
     for d in (QG_ROOT / "artifacts", QG_ROOT / "reports"):
         if d.exists():
-            _shutil.rmtree(d)
+            shutil.rmtree(d)
     from orchestrator.sandbox import compose_down
 
     proc = compose_down(_fresh_ctx())

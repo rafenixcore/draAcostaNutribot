@@ -232,3 +232,49 @@ def test_main_run_guard_branch_mismatch_blocks(tmp_path, monkeypatch):
     monkeypatch.setattr("orchestrator.run.run_gate", fake)
     assert cli.main(["run"]) == 2
     assert called == []
+
+
+def test_main_run_guard_require_clean_blocks(tmp_path, monkeypatch):
+    qg = tmp_path / "qg"
+    (qg / "config").mkdir(parents=True)
+    (qg / "config" / "triggers.yml").write_text("pre_production: []\n")
+    (qg / "config" / "rules.yml").write_text("rules: []\nskills: {}\n")
+    (qg / "artifacts").mkdir()
+    (qg / "settings.json").write_text('{"project": {"require_clean": true}}')
+    _mkapp(tmp_path, "backend")
+    _git_repo(tmp_path)
+    # dirty the tree AFTER the commit: uncommitted change must block
+    (tmp_path / "f.txt").write_text("changed\n")
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(cli, "QG_ROOT", qg)
+    called = []
+
+    def fake(ctx, trigger="pre_production"):
+        called.append(True)
+        return [], "PASS"
+
+    monkeypatch.setattr("orchestrator.run.run_gate", fake)
+    assert cli.main(["run"]) == 2
+    assert called == []
+
+
+def test_main_run_non_git_prints_banner_and_proceeds(tmp_path, monkeypatch, capsys):
+    qg = tmp_path / "qg"
+    (qg / "config").mkdir(parents=True)
+    (qg / "config" / "triggers.yml").write_text("pre_production: []\n")
+    (qg / "config" / "rules.yml").write_text("rules: []\nskills: {}\n")
+    (qg / "artifacts").mkdir()
+    _mkapp(tmp_path, "backend")
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(cli, "QG_ROOT", qg)
+    captured = {}
+
+    def fake(ctx, trigger="pre_production"):
+        captured["analyzed"] = ctx.analyzed
+        return [], "PASS"
+
+    monkeypatch.setattr("orchestrator.run.run_gate", fake)
+    assert cli.main(["run"]) == 0
+    out = capsys.readouterr().out
+    assert "not a git repository" in out
+    assert captured["analyzed"]["in_git"] is False
