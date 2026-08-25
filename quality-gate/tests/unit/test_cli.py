@@ -258,6 +258,40 @@ def test_main_run_guard_require_clean_blocks(tmp_path, monkeypatch):
     assert called == []
 
 
+def test_main_setup_installs_project_deps(tmp_path, monkeypatch):
+    qg = tmp_path / "qg"
+    (qg / "config").mkdir(parents=True)
+    (qg / "artifacts").mkdir(parents=True)
+    venv = qg / ".venv"
+    (venv / "bin").mkdir(parents=True)
+    (venv / "bin" / "python").write_text("")
+    (qg / "artifacts" / "project-profile.json").write_text(
+        '{"language": "python", "framework": "fastapi", "db": null, '
+        '"cache": null, "docker": false, "test_system": "pytest", '
+        '"endpoints": [], "app_root": "backend"}'
+    )
+    _mkapp(tmp_path, "backend")
+    # Tool-only pyproject (no [project].dependencies): the adapter falls
+    # through to requirements.txt for declared deps.
+    (tmp_path / "backend" / "pyproject.toml").write_text("[tool.ruff]\n")
+    (tmp_path / "backend" / "requirements.txt").write_text("fastapi>=0.110\n")
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(cli, "QG_ROOT", qg)
+    calls = []
+
+    def fake_uv(*args, **kwargs):
+        calls.append(args)
+        return type("R", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+
+    monkeypatch.setattr("subprocess.run", fake_uv)
+    assert cli.main(["setup"]) == 0
+    install = [c for c in calls if c and c[0][:2] == ["uv", "pip"]]
+    assert install, "expected a uv pip install call"
+    reqs_file = install[0][0][-1]
+    with open(reqs_file) as f:
+        assert "fastapi>=0.110" in f.read()
+
+
 def test_main_run_non_git_prints_banner_and_proceeds(tmp_path, monkeypatch, capsys):
     qg = tmp_path / "qg"
     (qg / "config").mkdir(parents=True)

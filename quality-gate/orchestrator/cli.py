@@ -129,6 +129,40 @@ def cmd_setup() -> int:
             print(proc.stdout or proc.stderr)
             if proc.returncode != 0:
                 return ExitCodes.INFRA
+        # Install the analyzed project's declared deps into the gate venv so
+        # functional_testing coverage means something. Best-effort: never
+        # crashes setup. Skipped when no profile exists yet (run qg discover).
+        if profile.framework != "unsupported":
+            from orchestrator.adapters.base import get_adapter
+
+            try:
+                deps = get_adapter(profile.framework)().get_dependencies(
+                    PROJECT_ROOT / profile.app_root
+                )
+            except Exception:  # noqa: BLE001 — best-effort provisioning
+                deps = []
+            if deps:
+                reqs = QG_ROOT / "artifacts" / "project-requirements.txt"
+                reqs.write_text("\n".join(deps) + "\n")
+                proc = subprocess.run(
+                    [
+                        "uv",
+                        "pip",
+                        "install",
+                        "--python",
+                        str(venv / "bin" / "python"),
+                        "-r",
+                        str(reqs),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if proc.returncode != 0:
+                    print(
+                        "warning: could not install project test deps "
+                        f"(functional_testing will fail): {proc.stderr.strip()}"
+                    )
     print("setup complete")
     return ExitCodes.PASS
 
