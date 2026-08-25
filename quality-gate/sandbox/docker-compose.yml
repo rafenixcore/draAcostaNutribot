@@ -1,0 +1,29 @@
+# Base services for the quality gate sandbox (spec §3). Digests pinned.
+name: qg_sandbox
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env.qg}
+    volumes:
+      - qg_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  redis:
+    image: redis:7-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  qg_postgres:
+# k6 skills connect to the "qg_sandbox" network by name; without this the
+# compose project network would be "qg_sandbox_default" and k6 would never
+# reach the app under test.
+networks:
+  default:
+    name: qg_sandbox

@@ -1,0 +1,17 @@
+# Subsets of skills runnable at different pipeline stages (spec §9).
+pre_merge:
+  - sast
+  - deps
+
+pre_production:   # default trigger
+  - linting
+  - functional_testing
+  - sast
+  - secrets
+  - deps
+  - trivy
+  - performance
+
+# v0.1: design only, not implemented (spec §9)
+scheduled_nightly:
+  - deps

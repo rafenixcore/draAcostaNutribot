@@ -1,0 +1,50 @@
+# Thresholds v0.1. Metrics are normalized by the skill layer (spec §6).
+rules:
+  - id: coverage-minimum
+    metric: coverage.line_percent
+    operator: gte
+    threshold: 80
+    severity: FAIL
+  - id: sast-high
+    metric: semgrep.high_count
+    operator: lte
+    threshold: 0
+    severity: FAIL
+  - id: secrets-present
+    metric: secrets.count
+    operator: lte
+    threshold: 0
+    severity: FAIL
+  - id: deps-critical
+    metric: pip_audit.critical_count
+    operator: lte
+    threshold: 0
+    severity: FAIL
+  - id: trivy-critical
+    metric: trivy.critical_count
+    operator: lte
+    threshold: 0
+    severity: FAIL
+  - id: perf-smoke
+    metric: k6.smoke_p95_ms
+    operator: lte
+    threshold: 1000
+    severity: FAIL
+  - id: perf-load
+    metric: k6.load_p95_ms
+    operator: lte
+    threshold: 2000
+    severity: FAIL
+  - id: lint-errors
+    metric: lint.error_count
+    operator: lte
+    threshold: 0
+    severity: WARN
+
+skills:
+  performance:
+    on_skip: WARN      # no Dockerfile → k6 can't run (spec §2)
+  trivy:
+    on_skip: WARN      # no Dockerfile
+  sast:
+    on_error: FAIL
