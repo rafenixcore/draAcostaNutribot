@@ -19,6 +19,7 @@ LIMITATIONS = [
 def write_summary(
     ctx: RunContext, results: list[SkillResult], global_status_: str, trigger: str
 ) -> tuple[Path, Path]:
+    """Write summary.json (full payload) + summary.md; returns (md, json) paths."""
     ctx.reports_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "run_id": ctx.artifacts_dir.name,
@@ -34,15 +35,18 @@ def write_summary(
     lines = [
         f"# Quality Gate — {payload['run_id']}",
         f"\n**Status:** {global_status_}  **Trigger:** {trigger}",
-        "\n## Skills",
     ]
     if ctx.analyzed:
         a = ctx.analyzed
-        lines.insert(
-            2,
-            f"**Analyzed:** {a.get('branch')} @ {a.get('commit')}"
-            + (" (dirty)" if a.get("dirty") else ""),
-        )
+        if a.get("in_git"):
+            analyzed_line = (
+                f"**Analyzed:** {a.get('branch')} @ {a.get('commit')}"
+                + (" (dirty)" if a.get("dirty") else "")
+            )
+        else:
+            analyzed_line = "**Analyzed:** not a git repository"
+        lines.append(analyzed_line)
+    lines.append("\n## Skills")
     for r in results:
         lines.append(
             f"- **{r.skill}** [{r.status.value}] {r.tool} ({r.duration_ms} ms)"

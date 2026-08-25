@@ -46,3 +46,29 @@ def test_summary_includes_analyzed_state(tmp_path):
     payload = json.loads(jpath.read_text())
     assert payload["analyzed_state"] == ctx.analyzed
     assert "main" in mpath.read_text() and "abc1234" in mpath.read_text()
+
+
+def test_summary_non_git_renders_not_a_repository(tmp_path):
+    ctx = RunContext(
+        project_root=tmp_path,
+        qg_root=tmp_path / "qg",
+        artifacts_dir=tmp_path / "artifacts",
+        reports_dir=tmp_path / "reports",
+        analyzed={"in_git": False, "branch": None, "commit": None, "dirty": None},
+    )
+    mpath, _ = write_summary(ctx, [], "PASS", "pre_production")
+    md = mpath.read_text()
+    assert "not a git repository" in md
+    assert "None @ None" not in md
+
+
+def test_summary_dirty_suffix(tmp_path):
+    ctx = RunContext(
+        project_root=tmp_path,
+        qg_root=tmp_path / "qg",
+        artifacts_dir=tmp_path / "artifacts",
+        reports_dir=tmp_path / "reports",
+        analyzed={"in_git": True, "branch": "dev", "commit": "deadbeef", "dirty": True},
+    )
+    mpath, _ = write_summary(ctx, [], "PASS", "pre_production")
+    assert " (dirty)" in mpath.read_text()
