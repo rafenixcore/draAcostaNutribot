@@ -39,3 +39,40 @@ def git_fingerprint(project_root: Path) -> dict:
         "commit": commit,
         "dirty": bool(status),
     }
+
+
+def check_run_guards(analyzed: dict, settings: dict) -> str | None:
+    """Return an error message when a run guard blocks, else None.
+
+    Guards are execution preconditions (config-driven), never quality
+    metrics — they cannot influence the PASS/FAIL verdict.
+    """
+    project = settings.get("project", {}) or {}
+    require_branch = project.get("require_branch") or []
+    require_clean = bool(project.get("require_clean"))
+    if require_branch and not analyzed["in_git"]:
+        return "require_branch is set but this is not a git repository"
+    if require_branch and analyzed["branch"] not in require_branch:
+        return (
+            f"require_branch {require_branch} — current branch is "
+            f"{analyzed['branch']}; refusing to run"
+        )
+    if require_clean and not analyzed["in_git"]:
+        return "require_clean is set but this is not a git repository"
+    if require_clean and analyzed["dirty"]:
+        return "require_clean — working tree has uncommitted changes; refusing to run"
+    return None
+
+
+def state_banner(analyzed: dict) -> str:
+    if not analyzed["in_git"]:
+        return (
+            "WARNING: not a git repository — the analyzed state cannot be "
+            "attributed to a branch/commit. Verify the working tree by hand."
+        )
+    dirty = " (dirty: uncommitted changes present)" if analyzed["dirty"] else ""
+    return (
+        f"WARNING: analyzing branch '{analyzed['branch']}' @ "
+        f"{analyzed['commit']}{dirty}. If this is not the state you intend "
+        "to validate, cancel now."
+    )
