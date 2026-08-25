@@ -258,7 +258,8 @@ def test_main_run_guard_require_clean_blocks(tmp_path, monkeypatch):
     assert called == []
 
 
-def test_main_setup_installs_project_deps(tmp_path, monkeypatch):
+def _provision_env(tmp_path):
+    """Scaffold a discoverable project + gate dir with a profile for setup."""
     qg = tmp_path / "qg"
     (qg / "config").mkdir(parents=True)
     (qg / "artifacts").mkdir(parents=True)
@@ -275,6 +276,11 @@ def test_main_setup_installs_project_deps(tmp_path, monkeypatch):
     # through to requirements.txt for declared deps.
     (tmp_path / "backend" / "pyproject.toml").write_text("[tool.ruff]\n")
     (tmp_path / "backend" / "requirements.txt").write_text("fastapi>=0.110\n")
+    return qg
+
+
+def test_main_setup_installs_project_deps(tmp_path, monkeypatch):
+    qg = _provision_env(tmp_path)
     monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
     monkeypatch.setattr(cli, "QG_ROOT", qg)
     calls = []
@@ -285,11 +291,48 @@ def test_main_setup_installs_project_deps(tmp_path, monkeypatch):
 
     monkeypatch.setattr("subprocess.run", fake_uv)
     assert cli.main(["setup"]) == 0
-    install = [c for c in calls if c and c[0][:2] == ["uv", "pip"]]
-    assert install, "expected a uv pip install call"
-    reqs_file = install[0][0][-1]
+    arg_lists = [c[0] for c in calls]
+    # (a) a uv venv call creates the dedicated deps venv from the gate venv
+    # python — the gate venv itself must never be touched by project deps.
+    venv_calls = [a for a in arg_lists if a[:2] == ["uv", "venv"]]
+    assert venv_calls, "expected a uv venv call creating the deps venv"
+    venv_call = venv_calls[0]
+    assert str(qg / "artifacts" / "deps-venv") in venv_call
+    assert venv_call[venv_call.index("--python") + 1] == str(
+        qg / ".venv" / "bin" / "python"
+    )
+    # (b) every uv pip install targets the deps venv, never the gate venv.
+    installs = [a for a in arg_lists if a[:3] == ["uv", "pip", "install"]]
+    assert installs, "expected a uv pip install call"
+    for a in installs:
+        assert a[a.index("--python") + 1] == str(
+            qg / "artifacts" / "deps-venv" / "bin" / "python"
+        )
+    # (c) the reqs file carries the project's declared deps.
+    reqs_file = next(a[a.index("-r") + 1] for a in installs if "-r" in a)
     with open(reqs_file) as f:
         assert "fastapi>=0.110" in f.read()
+
+
+def test_main_setup_deps_install_failure_warns_but_exits_zero(
+    tmp_path, monkeypatch, capsys
+):
+    qg = _provision_env(tmp_path)
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(cli, "QG_ROOT", qg)
+    calls = []
+
+    def fake_uv(*args, **kwargs):
+        calls.append(args)
+        if args[0][:2] == ["uv", "venv"]:
+            return type("R", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+        return type("R", (), {"returncode": 1, "stdout": "", "stderr": "boom"})
+
+    monkeypatch.setattr("subprocess.run", fake_uv)
+    assert cli.main(["setup"]) == 0
+    out = capsys.readouterr().out
+    assert "warning: could not install project test deps" in out
+    assert "boom" in out
 
 
 def test_main_run_non_git_prints_banner_and_proceeds(tmp_path, monkeypatch, capsys):

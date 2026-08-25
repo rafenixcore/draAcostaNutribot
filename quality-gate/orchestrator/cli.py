@@ -129,9 +129,9 @@ def cmd_setup() -> int:
             print(proc.stdout or proc.stderr)
             if proc.returncode != 0:
                 return ExitCodes.INFRA
-        # Install the analyzed project's declared deps into the gate venv so
-        # functional_testing coverage means something. Best-effort: never
-        # crashes setup. Skipped when no profile exists yet (run qg discover).
+        # Provision the analyzed project's declared deps so functional_testing
+        # coverage means something. Best-effort: never crashes setup. Skipped
+        # when no profile exists yet (run qg discover).
         if profile.framework != "unsupported":
             from orchestrator.adapters.base import get_adapter
 
@@ -139,20 +139,25 @@ def cmd_setup() -> int:
                 deps = get_adapter(profile.framework)().get_dependencies(
                     PROJECT_ROOT / profile.app_root
                 )
-            except Exception:  # noqa: BLE001 — best-effort provisioning
+            except Exception as exc:  # noqa: BLE001 — best-effort provisioning
+                print(f"warning: could not read project dependencies: {exc}")
                 deps = []
             if deps:
                 reqs = QG_ROOT / "artifacts" / "project-requirements.txt"
                 reqs.write_text("\n".join(deps) + "\n")
+                # Project deps go into a DEDICATED venv (artifacts/deps-venv),
+                # never the gate venv: installing them there could clobber the
+                # gate's pinned tool versions (e.g. the project needs
+                # ruff>=0.8 but the gate pins ruff==0.6.9), silently breaking
+                # reproducibility of the gate's own checks.
+                deps_venv = QG_ROOT / "artifacts" / "deps-venv"
                 proc = subprocess.run(
                     [
                         "uv",
-                        "pip",
-                        "install",
+                        "venv",
                         "--python",
                         str(venv / "bin" / "python"),
-                        "-r",
-                        str(reqs),
+                        str(deps_venv),
                     ],
                     capture_output=True,
                     text=True,
@@ -160,9 +165,32 @@ def cmd_setup() -> int:
                 )
                 if proc.returncode != 0:
                     print(
-                        "warning: could not install project test deps "
+                        "warning: could not create deps venv "
                         f"(functional_testing will fail): {proc.stderr.strip()}"
                     )
+                else:
+                    # ["coverage"] rides along: the project's requirements
+                    # rarely declare it, but coverage measurement needs it.
+                    for extra in (["-r", str(reqs)], ["coverage"]):
+                        proc = subprocess.run(
+                            [
+                                "uv",
+                                "pip",
+                                "install",
+                                "--python",
+                                str(deps_venv / "bin" / "python"),
+                                *extra,
+                            ],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
+                        if proc.returncode != 0:
+                            print(
+                                "warning: could not install project test deps "
+                                f"(functional_testing will fail): {proc.stderr.strip()}"
+                            )
+                            break
     print("setup complete")
     return ExitCodes.PASS
 
