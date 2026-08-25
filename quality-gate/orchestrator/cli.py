@@ -169,9 +169,13 @@ def cmd_setup() -> int:
                         f"(functional_testing will fail): {proc.stderr.strip()}"
                     )
                 else:
-                    # ["coverage"] rides along: the project's requirements
-                    # rarely declare it, but coverage measurement needs it.
-                    for extra in (["-r", str(reqs)], ["coverage"]):
+                    # pytest comes FIRST: it's a tool the gate provides (most
+                    # projects don't declare it), and installing it before
+                    # -r reqs lets a project that pins its own pytest in
+                    # requirements.txt still win. coverage rides along last:
+                    # the requirements rarely declare it, but the metrics
+                    # step needs it.
+                    for extra in (["pytest"], ["-r", str(reqs)], ["coverage"]):
                         proc = subprocess.run(
                             [
                                 "uv",

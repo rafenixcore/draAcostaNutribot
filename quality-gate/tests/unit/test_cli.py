@@ -335,6 +335,28 @@ def test_main_setup_deps_install_failure_warns_but_exits_zero(
     assert "boom" in out
 
 
+def test_main_setup_installs_pytest_first_in_deps_venv(tmp_path, monkeypatch):
+    qg = _provision_env(tmp_path)
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(cli, "QG_ROOT", qg)
+    calls = []
+
+    def fake_uv(*args, **kwargs):
+        calls.append(args)
+        return type("R", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+
+    monkeypatch.setattr("subprocess.run", fake_uv)
+    assert cli.main(["setup"]) == 0
+    installs = [
+        a for c in calls if (a := c[0]) and a[:3] == ["uv", "pip", "install"]
+    ]
+    assert installs, "expected uv pip install calls"
+    # pytest is a gate-provided tool, not something every project declares:
+    # install it FIRST so a project that pins its own pytest in
+    # requirements.txt still wins over the gate default.
+    assert installs[0][-1] == "pytest"
+
+
 def test_main_run_non_git_prints_banner_and_proceeds(tmp_path, monkeypatch, capsys):
     qg = tmp_path / "qg"
     (qg / "config").mkdir(parents=True)
