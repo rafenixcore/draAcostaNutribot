@@ -1,0 +1,2 @@
+[deploy]
+preDeployCommand = "python create_tables.py"
