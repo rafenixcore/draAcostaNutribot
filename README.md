@@ -1,6 +1,5 @@
-# 🥗 draAcostaNutrisoft
+# 🥗 Nutrisoft
 
-[![CI](https://github.com/hrafael2011/draAcostaNutribot/actions/workflows/ci.yml/badge.svg)](https://github.com/hrafael2011/draAcostaNutribot/actions/workflows/ci.yml)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue?logo=python)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
@@ -8,7 +7,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)](https://www.postgresql.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Intelligent nutrition platform for professional clinics.** AI-assisted meal planning backed by a deterministic nutritional engine — clinical accuracy in every macro, professional PDF export, and a Telegram assistant for the doctor.
+**Intelligent nutrition platform for professional clinics.** AI-assisted meal planning backed by a deterministic nutritional engine — clinical accuracy in every macro, professional PDF export, and an installable PWA for the nutritionist.
 
 > **Value proposition:** The nutritionist focuses on the patient, not on calculations. The AI drafts meals; the deterministic engine guarantees clinical precision in every macronutrient.
 
@@ -40,7 +39,7 @@
 - ✅ Engine schema versioning (`ENGINE_SCHEMA_VERSION = "1.0"`)
 
 ### 🤖 AI-Powered Diet Drafting
-- ✅ OpenAI-compatible (DeepSeek) for meal descriptions and recommendations
+- ✅ OpenAI `gpt-4o-mini` for meal descriptions and recommendations
 - ✅ Engine + LLM merge: engine values **override** LLM output for clinical safety
 - ✅ Macronutrient recalculation on manual meal edits
 - ✅ Temperature 0.4 for generation, 0.2 for recalculation
@@ -81,7 +80,7 @@
 | **Frontend** | React + TypeScript + Vite | 19 / 5.7 / 7 |
 | **State/Fetching** | @tanstack/react-query | 5 |
 | **Styling** | Tailwind CSS 4 + Framer Motion | — |
-| **AI** | DeepSeek (OpenAI-compatible) | — |
+| **AI** | OpenAI (`gpt-4o-mini`) | — |
 | **PDF** | WeasyPrint + ReportLab (fallback) | ≥68 / ≥4.2 |
 | **Email** | Gmail API | — |
 | **Testing** | pytest (backend), Vitest (frontend) | — |
@@ -93,12 +92,12 @@
 
 ```mermaid
 C4Container
-  title draAcostaNutrisoft — Container Diagram
+  title Nutrisoft — Container Diagram
 
   Person(doctor, "Nutritionist", "Manages patients and diets")
   Person(patient, "Patient", "Fills out intake forms")
 
-  System_Boundary(nutrisoft, "draAcostaNutrisoft") {
+  System_Boundary(nutrisoft, "Nutrisoft") {
     Container(web, "Web Panel", "React 19 + TypeScript", "Dashboard, diet wizard, patient management")
     Container(api, "API Backend", "FastAPI + Python 3.12", "Business logic, diet generation")
     Container(engine, "Nutrition Engine", "Python (deterministic)", "BMR, TDEE, macros, clinical rules")
@@ -106,7 +105,7 @@ C4Container
     Container(scheduler, "Background Jobs", "APScheduler", "Email diet reminders")
   }
 
-  System_Ext(openai, "DeepSeek API", "Meal descriptions and recommendations")
+  System_Ext(openai, "OpenAI API", "Meal descriptions and recommendations")
   System_Ext(gmail, "Gmail API", "Diet delivery and reminders")
 
   Rel(doctor, web, "Manages patients and diets", "HTTPS")
@@ -128,13 +127,13 @@ For a deeper dive, read [ARCHITECTURE.md](docs/ARCHITECTURE.md) (C4 diagrams, da
 
 ## Demo
 
-> **🔗 Live demo:** https://draacostanutrisoft.vercel.app
+> **🔗 Live demo:** https://dra-acosta-nutribot.vercel.app
 
 | Role | Email | Password |
 |------|-------|----------|
 | Demo doctor | `demo@nutrisoft.com` | _Contact me for access_ |
 
-> **Note:** The demo uses a staging environment with sanitized data. Contact [Hendrick Rafael](mailto:hendrick@example.com) for test credentials.
+> **Note:** The demo uses a staging environment with sanitized data. Contact [Hendrick Rafael](mailto:hendrickrafael@rafenixcore.com) for test credentials.
 
 <!-- TODO: Add screenshots
 ![Dashboard](docs/screenshots/dashboard.png)
@@ -262,12 +261,10 @@ Core coverage: **nutrition engine** (139 + 67 + 105 + 107 test lines), **E2E flo
 |----------|----------|-------------|---------|
 | `DATABASE_URL` | ✅ | PostgreSQL connection string | `postgresql+asyncpg://...` |
 | `JWT_SECRET` | ✅ | Secret key for JWT signing | — |
-| `OPENAI_API_KEY` | ✅ | DeepSeek (OpenAI-compatible) API key | — |
-| `OPENAI_MODEL` | ✅ | Model ID for diet generation | `deepseek-chat` |
+| `OPENAI_API_KEY` | ✅ | OpenAI API key | — |
+| `OPENAI_MODEL` | ✅ | Model ID for diet generation | `gpt-4o-mini` |
+| `OPENAI_BASE_URL` | — | OpenAI-compatible endpoint | `https://api.openai.com/v1` |
 | `CORS_ORIGINS` | ✅ | Allowed CORS origins (comma-separated) | `http://localhost:5173` |
-| `TELEGRAM_BOT_TOKEN` | Use-case | Telegram bot token | — |
-| `TELEGRAM_BOT_USERNAME` | Use-case | Telegram bot username | — |
-| `TELEGRAM_WEBHOOK_SECRET` | Use-case | Webhook secret token | — |
 | `GMAIL_API_CREDENTIALS` | Use-case | Gmail API service account JSON | — |
 | `ENV` | — | Environment label | `development` |
 | `RUN_MIGRATIONS` | — | Run Alembic migrations on boot | `1` |
