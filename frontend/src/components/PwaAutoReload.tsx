@@ -8,7 +8,7 @@ const CHECK_INTERVAL_MS = 5 * 60 * 1000 // every 5 minutes
  *  deploys are picked up without waiting for a browser navigation. */
 export default function PwaAutoReload() {
   const { needRefresh, updateServiceWorker } = useRegisterSW({
-    onRegisteredSW(_swUrl, registration) {
+    onRegisteredSW(swUrl, registration) {
       if (!registration) return
       // Periodic check: ask the browser to look for a new service worker
       const interval = setInterval(() => {

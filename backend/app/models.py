@@ -220,3 +220,12 @@ class PasswordResetToken(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     doctor = relationship("Doctor", back_populates="password_reset_tokens")
+
+
+class TokenBlacklist(Base):
+    __tablename__ = "token_blacklist"
+
+    id = Column(Integer, primary_key=True, index=True)
+    jti = Column(String(255), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)

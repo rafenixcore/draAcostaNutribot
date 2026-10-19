@@ -7,9 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.core.config import settings
-from app.api.deps import get_current_active_doctor
+from app.api.deps import get_current_active_doctor, oauth2_scheme
 from app.core.limiter import limiter
-from app.models import Doctor, PasswordResetToken, utcnow
+from app.models import Doctor, PasswordResetToken, TokenBlacklist, utcnow
 from app.schemas import (
     DoctorCreate,
     DoctorOut,
@@ -161,15 +161,86 @@ async def change_password(
 
 
 @router.post("/refresh")
-async def refresh():
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Refresh tokens are not implemented yet",
+async def refresh(
+    db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+):
+    token_hash = sha256(token.encode()).hexdigest()
+    # Check blacklist
+    result = await db.execute(
+        select(TokenBlacklist).where(TokenBlacklist.jti == token_hash)
     )
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked",
+        )
+    # Decode current token
+    try:
+        doctor_id = int(decode_access_token(token))
+    except (ValueError, Exception):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+    # Verify doctor still exists and is active
+    result = await db.execute(select(Doctor).where(Doctor.id == doctor_id))
+    doctor = result.scalar_one_or_none()
+    if not doctor or not doctor.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account not found or inactive",
+        )
+    # Blacklist old token
+    import jwt as _jwt
+    try:
+        payload = _jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM], options={"verify_exp": False})
+        exp = payload.get("exp")
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc) if exp else utcnow()
+    except Exception:
+        expires_at = utcnow()
+    blacklisted = TokenBlacklist(jti=token_hash, expires_at=expires_at)
+    db.add(blacklisted)
+
+    # Issue new token
+    role = doctor.role or "doctor"
+    new_token = create_access_token(
+        str(doctor.id),
+        {"role": role, "must_change_password": doctor.must_change_password},
+    )
+    await db.commit()
+    return Token(access_token=new_token, role=role, must_change_password=doctor.must_change_password)
 
 
 @router.post("/logout")
-async def logout():
+async def logout(
+    db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+):
+    token_hash = sha256(token.encode()).hexdigest()
+    # Check if already blacklisted
+    result = await db.execute(
+        select(TokenBlacklist).where(TokenBlacklist.jti == token_hash)
+    )
+    if result.scalar_one_or_none():
+        return {"ok": True}
+    # Decode to get expiration
+    from datetime import timezone
+    try:
+        import jwt
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            options={"verify_exp": False},
+        )
+        exp = payload.get("exp")
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc) if exp else utcnow()
+    except Exception:
+        expires_at = utcnow()
+    blacklisted = TokenBlacklist(jti=token_hash, expires_at=expires_at)
+    db.add(blacklisted)
+    await db.commit()
     return {"ok": True}
 
 
