@@ -134,9 +134,10 @@ original slug (`diet_telegram_agent`).
 In June 2026 the conversational surface was replaced by an installable PWA
 (React 19 + `vite-plugin-pwa`) with a guided generation wizard, shareable
 intake links for patients and a browser PDF preview. The cut was direct — the
-bot was removed, not kept running in parallel: the Telegram models and tables
-were dropped in Alembic revision `f8242b498188` (`0007_remove_telegram_tables`,
-2026-06-10).
+bot stopped running, the Telegram models and tables were dropped in Alembic
+revision `f8242b498188` (`0007_remove_telegram_tables`, 2026-06-10), and the
+connector code was archived under `app/api/_archive/` and
+`app/services/_archive/`.
 
 **Why:** clinical review needs a screen, not a chat. Approving a 7-day plan
 means comparing meals, macros and restrictions side by side; a chat transcript
