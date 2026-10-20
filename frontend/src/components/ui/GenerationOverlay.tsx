@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle } from "@phosphor-icons/react"
 
 type Props = {
   open: boolean

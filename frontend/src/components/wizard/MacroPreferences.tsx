@@ -33,7 +33,7 @@ function MacroSelector({ label, field, value, onChange }: { label: string; field
   )
 }
 
-export default function MacroPreferences({ protein, carbs, fat, onChange, onNext }: Props) {
+export default function MacroPreferences({ protein, carbs, fat, onChange }: Props) {
   return (
     <div className="space-y-4">
       <p className="text-sm font-medium text-gray-700">Preferencias de macronutrientes</p>

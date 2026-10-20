@@ -159,27 +159,6 @@ function formatDate(dateStr?: string | null): string {
   })
 }
 
-function checkDietReadiness(
-  patientData: Partial<Patient>,
-  profileData: Partial<PatientProfile> | null,
-  latestMetric: { weight_kg?: number | null; height_cm?: number | null } | null | undefined,
-): string[] {
-  const missing: string[] = []
-  if (!patientData.birth_date) missing.push("fecha de nacimiento")
-  if (!patientData.sex) missing.push("sexo")
-  if (!patientData.country || !patientData.city) missing.push("país o ciudad")
-  if (!profileData) {
-    missing.push("perfil clínico")
-  } else {
-    if (!profileData.objective) missing.push("objetivo")
-    if (!profileData.food_allergies) missing.push("alergias alimentarias")
-    if (!profileData.foods_avoided) missing.push("alimentos a evitar")
-  }
-  if (!latestMetric || latestMetric.weight_kg == null) missing.push("peso")
-  if (!latestMetric || latestMetric.height_cm == null) missing.push("altura")
-  return missing
-}
-
 function checkMissingDemographics(patientData: Partial<Patient>): string[] {
   const missing: string[] = []
   if (!patientData.birth_date) missing.push("fecha de nacimiento")
@@ -486,21 +465,6 @@ export default function PatientDetail() {
     return () => {
       cancelled = true
     }
-  }, [patientId])
-
-  // ── Refresh helpers ────────────────────────────────────────────────────
-  const refreshSummary = useCallback(async () => {
-    try {
-      const s = await getPatientSummary(patientId)
-      setSummary(s)
-    } catch {
-      setSummary(null)
-    }
-  }, [patientId])
-
-  const refreshProfile = useCallback(async () => {
-    const pr = await getProfile(patientId)
-    setProfile(pr)
   }, [patientId])
 
   const refreshMetrics = useCallback(async () => {

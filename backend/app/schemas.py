@@ -1,5 +1,6 @@
 from datetime import date, datetime
-from typing import Optional, Any, List, Literal
+from typing import Any, Literal, Optional
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
@@ -164,7 +165,7 @@ class PatientMetricsOut(BaseModel):
 
 
 class PaginatedPatients(BaseModel):
-    items: List[PatientOut]
+    items: list[PatientOut]
     total: int
     page: int
     page_size: int
@@ -205,7 +206,7 @@ class DashboardSummary(BaseModel):
     new_patients_30d: int
     incomplete_profiles: int
     diets_generated: int
-    latest_activity: List[dict] = Field(default_factory=list)
+    latest_activity: list[dict] = Field(default_factory=list)
 
 
 class PatientProfileUpsert(BaseModel):
@@ -375,7 +376,7 @@ class DietOut(BaseModel):
 
 
 class PlanDurationPresetsOut(BaseModel):
-    days: List[int]
+    days: list[int]
 
 
 class DietVersionSummary(BaseModel):
@@ -389,7 +390,7 @@ class DietVersionSummary(BaseModel):
 
 
 class PaginatedDiets(BaseModel):
-    items: List[DietOut]
+    items: list[DietOut]
     total: int
     page: int
     page_size: int

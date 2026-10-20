@@ -8,7 +8,6 @@ from openai import AsyncOpenAI
 from app.core.config import settings
 from app.services.plan_meals import normalize_plan_meal_metadata
 
-
 _openai_client: AsyncOpenAI | None = None
 
 

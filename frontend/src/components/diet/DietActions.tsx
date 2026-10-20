@@ -20,7 +20,6 @@ type Props = {
 }
 
 export default function DietActions({
-  dietId,
   status,
   onApprove,
   onDiscard,
@@ -42,7 +41,6 @@ export default function DietActions({
     }
     onSendEmail?.()
   }
-  const isEditable = status === "pending_approval" || status === "generated"
 
   if (status === "pending_approval") {
     return (

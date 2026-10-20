@@ -1,5 +1,3 @@
-import Button from "../ui/Button"
-
 const PRESETS = [7, 14, 21, 28, 42, 56, 84, 112, 168]
 
 type Props = { value: number; onChange: (v: number) => void }

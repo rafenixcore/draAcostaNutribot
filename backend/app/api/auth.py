@@ -1,14 +1,24 @@
+import asyncio
+import secrets
+from datetime import datetime, timedelta, timezone
+from hashlib import sha256
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
-from app.core.security import create_access_token, get_password_hash, verify_password
-from app.core.config import settings
 from app.api.deps import get_current_active_doctor, oauth2_scheme
+from app.core.config import settings
+from app.core.database import get_db
 from app.core.limiter import limiter
+from app.core.security import (
+    create_access_token,
+    decode_access_token,
+    get_password_hash,
+    verify_password,
+)
 from app.models import Doctor, PasswordResetToken, TokenBlacklist, utcnow
 from app.schemas import (
     DoctorCreate,
@@ -20,10 +30,6 @@ from app.schemas import (
     VerifyTokenResponse,
 )
 from app.services.auth_email_service import send_password_reset_email
-
-import secrets
-from datetime import timedelta
-import asyncio
 
 router = APIRouter()
 
@@ -69,7 +75,7 @@ async def register_doctor(body: DoctorCreate, db: AsyncSession = Depends(get_db)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
-        )
+        ) from None
     await db.refresh(doctor)
     return doctor
 
@@ -182,7 +188,7 @@ async def refresh(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
-        )
+        ) from None
     # Verify doctor still exists and is active
     result = await db.execute(select(Doctor).where(Doctor.id == doctor_id))
     doctor = result.scalar_one_or_none()
@@ -262,7 +268,7 @@ async def forgot_password(
         existing = await db.execute(
             select(PasswordResetToken).where(
                 PasswordResetToken.doctor_id == doctor.id,
-                PasswordResetToken.used == False,
+                PasswordResetToken.used.is_(False),
                 PasswordResetToken.expires_at > utcnow(),
             )
         )

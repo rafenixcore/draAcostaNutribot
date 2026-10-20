@@ -1,17 +1,19 @@
 from datetime import datetime, timezone
+
 from sqlalchemy import (
-    Column,
-    Integer,
-    String,
+    JSON,
     Boolean,
+    Column,
     Date,
     DateTime,
-    Text,
     ForeignKey,
+    Integer,
     Numeric,
-    JSON,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
+
 from app.core.database import Base
 
 

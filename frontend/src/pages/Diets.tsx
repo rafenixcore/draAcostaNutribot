@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { BowlFood, CaretDown, MagnifyingGlass, Plus, Trash, X, Spinner } from "@phosphor-icons/react"
+import { BowlFood, MagnifyingGlass, Plus, Trash, X, Spinner } from "@phosphor-icons/react"
 import GenerationOverlay from "../components/ui/GenerationOverlay"
 import { generateDiet, getDiets, getPatients, getPlanDurationPresets, softDeleteDiet } from "../services/api"
 import type { Diet, PaginatedDiets } from "../types"
@@ -104,8 +104,6 @@ export default function Diets() {
   const {
     query: filterQuery,
     setQuery: setFilterQuery,
-    results: filterResults,
-    loading: filterLoading,
   } = usePatientSearch()
   const {
     query: formQuery,

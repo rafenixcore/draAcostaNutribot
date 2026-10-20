@@ -24,7 +24,7 @@ const MESSAGES: Record<
   },
 }
 
-export default function ShareButtons({ url, patientName, type }: ShareButtonsProps) {
+export default function ShareButtons({ url, type }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
   const msg = MESSAGES[type]
 

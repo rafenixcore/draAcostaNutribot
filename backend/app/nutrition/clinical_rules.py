@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from app.nutrition.contract import (
     MedicalConditionCode,
+    NormalizedNutritionGoal,
     NutritionAlert,
     NutritionAlertSeverity,
     NutritionCalculationInput,
-    NormalizedNutritionGoal,
 )
 
 # Tope conservador de proteína (g/kg/d) si hay enfermedad renal en el perfil.

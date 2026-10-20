@@ -37,8 +37,6 @@ export default function DietPreviewPanel({ diet, editable, onMealSave, onToggleE
   const { approve, discard, quickAdjust, regenerate } = useDietGeneration()
 
   const isPending = diet.status === "pending_approval"
-  const isGenerated = diet.status === "generated"
-  const isEditable = isPending || isGenerated
   const loading = approve.isPending || discard.isPending || quickAdjust.isPending || regenerate.isPending
 
   return (

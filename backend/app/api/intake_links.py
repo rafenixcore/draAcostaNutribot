@@ -16,7 +16,13 @@ from app.models import (
     PatientProfile,
     utcnow,
 )
-from app.schemas import IntakeLinkCreate, IntakeLinkOut, IntakeLinkPublicMeta, IntakePublicSubmit, IntakeUpdateSubmit
+from app.schemas import (
+    IntakeLinkCreate,
+    IntakeLinkOut,
+    IntakeLinkPublicMeta,
+    IntakePublicSubmit,
+    IntakeUpdateSubmit,
+)
 
 router = APIRouter()
 

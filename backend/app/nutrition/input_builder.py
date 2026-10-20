@@ -8,21 +8,6 @@ from decimal import Decimal
 from typing import Optional
 
 from app.logic.profile import norm
-
-
-def _merge_food_lists(a: str | None, b: str | None) -> str | None:
-    """Merge two comma-separated food lists, deduplicating entries."""
-    items: list[str] = []
-    seen: set[str] = set()
-    for raw in (a, b):
-        if not raw or not raw.strip():
-            continue
-        for item in raw.split(","):
-            cleaned = item.strip().lower()
-            if cleaned and cleaned not in seen:
-                seen.add(cleaned)
-                items.append(item.strip())
-    return ", ".join(items) if items else None
 from app.models import Patient, PatientMetrics, PatientProfile
 from app.nutrition.contract import (
     DietStyle,
@@ -39,6 +24,21 @@ from app.nutrition.contract import (
     PatientContextualFactors,
     SexForBmr,
 )
+
+
+def _merge_food_lists(a: str | None, b: str | None) -> str | None:
+    """Merge two comma-separated food lists, deduplicating entries."""
+    items: list[str] = []
+    seen: set[str] = set()
+    for raw in (a, b):
+        if not raw or not raw.strip():
+            continue
+        for item in raw.split(","):
+            cleaned = item.strip().lower()
+            if cleaned and cleaned not in seen:
+                seen.add(cleaned)
+                items.append(item.strip())
+    return ", ".join(items) if items else None
 
 
 class NutritionInputBuildError(Exception):

@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-
 DEFAULT_PLAN_DURATION_DAYS = 7
 MIN_PLAN_DURATION_DAYS = 7
 MAX_PLAN_DURATION_DAYS = 364

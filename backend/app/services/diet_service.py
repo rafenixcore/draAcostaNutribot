@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,9 +14,6 @@ from app.logic.diet_duration import (
     validate_duration_days,
 )
 from app.logic.diet_eligibility import diet_generation_blockers
-from app.nutrition import compute_nutrition
-from app.nutrition.input_builder import NutritionInputBuildError, build_nutrition_input_from_bundle
-from app.nutrition.plan_merge import merge_nutrition_into_plan, nutrition_targets_for_llm
 from app.models import (
     AuditLog,
     Diet,
@@ -27,6 +24,9 @@ from app.models import (
     PatientProfile,
     utcnow,
 )
+from app.nutrition import compute_nutrition
+from app.nutrition.input_builder import NutritionInputBuildError, build_nutrition_input_from_bundle
+from app.nutrition.plan_merge import merge_nutrition_into_plan, nutrition_targets_for_llm
 from app.services.diet_openai import generate_diet_plan_json, recalculate_macros_from_meals
 from app.services.plan_meals import meal_slots_for_count, normalize_meals_per_day
 
@@ -66,7 +66,7 @@ async def _latest_metric(
 
 async def load_patient_bundle(
     db: AsyncSession, patient_id: int, doctor_id: int
-) -> Tuple[Patient, Optional[PatientProfile], Optional[PatientMetrics]]:
+) -> tuple[Patient, Optional[PatientProfile], Optional[PatientMetrics]]:
     patient = await db.get(Patient, patient_id)
     if patient is None or patient.doctor_id != doctor_id:
         raise DietGenerationError("not_found", "Paciente no encontrado")

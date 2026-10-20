@@ -7,14 +7,14 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from app.core.limiter import limiter
-from app.core.circuit_breaker import CircuitBreakerMiddleware
 
-from app.api.router import api_router
-from app.core.config import settings
-from app.core.database import engine, Base
-from app.core.logging_config import setup_logging
 import app.models  # noqa: F401 — registers all ORM models on Base.metadata
+from app.api.router import api_router
+from app.core.circuit_breaker import CircuitBreakerMiddleware
+from app.core.config import settings
+from app.core.database import Base, engine
+from app.core.limiter import limiter
+from app.core.logging_config import setup_logging
 
 setup_logging(settings.is_production)
 logger = logging.getLogger(__name__)
@@ -65,8 +65,9 @@ async def start_scheduler():
     if settings.REMINDER_ENABLED:
         try:
             from apscheduler.schedulers.asyncio import AsyncIOScheduler
-            from app.services.reminder_service import check_and_send_reminders
+
             from app.core.database import async_session_factory
+            from app.services.reminder_service import check_and_send_reminders
 
             scheduler = AsyncIOScheduler()
 

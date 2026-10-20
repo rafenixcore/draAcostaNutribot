@@ -2,22 +2,20 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from app.nutrition.clinical_rules import apply_basic_clinical_rules
 from app.nutrition.contract import (
-    DietStyle,
     ENGINE_SCHEMA_VERSION,
+    DietStyle,
     MacroModePreference,
     MacroPreferenceLevel,
     MedicalConditionCode,
     NormalizedActivityLevel,
     NormalizedNutritionGoal,
-    NutritionStrategyMode,
     NutritionAlert,
     NutritionAlertSeverity,
     NutritionInput,
     NutritionResult,
+    NutritionStrategyMode,
     SexForBmr,
 )
 
@@ -127,7 +125,7 @@ def _validate_physiology(
     return None
 
 
-def _bmi_alerts(bmi: float) -> List[NutritionAlert]:
+def _bmi_alerts(bmi: float) -> list[NutritionAlert]:
     out: list[NutritionAlert] = []
     if bmi < BMI_UNDERWEIGHT:
         out.append(
