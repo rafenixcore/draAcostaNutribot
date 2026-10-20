@@ -4,7 +4,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/hrafael2011/draAcostaNutribot.git
+   git clone https://github.com/rafenixcore/draAcostaNutribot.git
    cd diet_telegram_agent
    ```
 
@@ -107,4 +107,4 @@ Keep files focused on a single responsibility. Follow the existing patterns:
 
 ## Questions?
 
-Open a [GitHub Discussion](https://github.com/hrafael2011/draAcostaNutribot/discussions) or contact the maintainer.
+Open a [GitHub Discussion](https://github.com/rafenixcore/draAcostaNutribot/discussions) or contact the maintainer.

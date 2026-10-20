@@ -125,6 +125,27 @@ For a deeper dive, read [ARCHITECTURE.md](docs/ARCHITECTURE.md) (C4 diagrams, da
 
 ---
 
+## Evolution: from Telegram bot to a PWA
+
+Nutrisoft started as a Telegram bot for the nutritionist: she sent commands in
+chat and received diets back as messages. The repository still carries the
+original slug (`diet_telegram_agent`).
+
+In June 2026 the conversational surface was replaced by an installable PWA
+(React 19 + `vite-plugin-pwa`) with a guided generation wizard, shareable
+intake links for patients and a browser PDF preview. The cut was direct — the
+bot was removed, not kept running in parallel: the Telegram models and tables
+were dropped in Alembic revision `f8242b498188` (`0007_remove_telegram_tables`,
+2026-06-10).
+
+**Why:** clinical review needs a screen, not a chat. Approving a 7-day plan
+means comparing meals, macros and restrictions side by side; a chat transcript
+makes that review slow and easy to get wrong. The deterministic nutrition
+engine, the approval workflow and the audit log were kept unchanged through
+the move.
+
+---
+
 ## Demo
 
 > **🔗 Live demo:** https://dra-acosta-nutribot.vercel.app
@@ -134,12 +155,6 @@ For a deeper dive, read [ARCHITECTURE.md](docs/ARCHITECTURE.md) (C4 diagrams, da
 | Demo doctor | `demo@nutrisoft.com` | _Contact me for access_ |
 
 > **Note:** The demo uses a staging environment with sanitized data. Contact [Hendrick Rafael](mailto:hendrickrafael@rafenixcore.com) for test credentials.
-
-<!-- TODO: Add screenshots
-![Dashboard](docs/screenshots/dashboard.png)
-![Diet Wizard](docs/screenshots/diet-wizard.png)
-![PDF Export](docs/screenshots/pdf-export.png)
--->
 
 ---
 
@@ -154,7 +169,7 @@ For a deeper dive, read [ARCHITECTURE.md](docs/ARCHITECTURE.md) (C4 diagrams, da
 
 ```bash
 # 1. Clone
-git clone https://github.com/hrafael2011/draAcostaNutribot.git
+git clone https://github.com/rafenixcore/draAcostaNutribot.git
 cd diet_telegram_agent
 
 # 2. Configure backend
@@ -291,5 +306,5 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  Built with ❤️ by <a href="https://github.com/hrafael2011">Hendrick Rafael</a>
+  Built with ❤️ by <a href="https://github.com/rafenixcore">Hendrick Rafael</a>
 </p>
