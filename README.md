@@ -19,6 +19,7 @@
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Demo](#demo)
+- [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
@@ -156,6 +157,25 @@ the move.
 | Demo doctor | `demo@nutrisoft.com` | _Contact me for access_ |
 
 > **Note:** The demo uses a staging environment with sanitized data. Contact [Hendrick Rafael](mailto:hendrickrafael@rafenixcore.com) for test credentials.
+
+---
+
+## Screenshots
+
+Captured from a local run seeded with `backend/app/demo_seed.py` — the patients shown
+(María López, Carlos Ruiz) are synthetic fixtures, and the demo phone number is blurred.
+
+| | |
+|---|---|
+| ![Login](docs/screenshots/nutrisoft-login.png) | ![Dashboard](docs/screenshots/nutrisoft-dashboard.png) |
+| **Login** — email + password, with password recovery | **Dashboard** — patient counts and profile completion |
+| ![Patients](docs/screenshots/nutrisoft-patients.png) | ![Patient detail](docs/screenshots/nutrisoft-patient-detail.png) |
+| **Patients** — searchable list with profile status | **Patient detail** — anthropometrics, BMI and demographics |
+| ![Diet wizard](docs/screenshots/nutrisoft-diet-wizard.png) | ![Login, mobile](docs/screenshots/nutrisoft-login-mobile.png) |
+| **Diet wizard** — first of six steps | **Login on mobile** (390×844) |
+
+> The diet list and the generated PDF are not shown: generating a diet calls the OpenAI
+> API, and these captures were taken without an API key.
 
 ---
 
