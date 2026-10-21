@@ -1,0 +1,19 @@
+[tool.ruff]
+line-length = 100
+# Código retirado: no se mantiene ni se despliega.
+extend-exclude = ["**/_archive"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+  # FastAPI: `Depends(...)` como valor por defecto ES el idioma del framework.
+  "B008",
+  # Líneas largas dentro de HTML/CSS/SQL embebidos; partirlas empeora la lectura.
+  "E501",
+  # `Optional[X]` frente a `X | None`: la migración son 289 anotaciones y no
+  # aporta nada en tiempo de ejecución. Se deja como deuda consciente.
+  "UP045",
+]

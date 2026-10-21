@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { BowlFood, CaretDown, MagnifyingGlass, Plus, Trash, X, Spinner } from "@phosphor-icons/react"
+import { BowlFood, MagnifyingGlass, Plus, Trash, X, Spinner } from "@phosphor-icons/react"
 import GenerationOverlay from "../components/ui/GenerationOverlay"
 import { generateDiet, getDiets, getPatients, getPlanDurationPresets, softDeleteDiet } from "../services/api"
 import type { Diet, PaginatedDiets } from "../types"
@@ -104,8 +104,6 @@ export default function Diets() {
   const {
     query: filterQuery,
     setQuery: setFilterQuery,
-    results: filterResults,
-    loading: filterLoading,
   } = usePatientSearch()
   const {
     query: formQuery,
@@ -385,8 +383,8 @@ export default function Diets() {
             {(strategyMode === "guided" || strategyMode === "manual") && (
               <p className="mt-1 text-xs text-slate-500">
                 {strategyMode === "manual"
-                  ? "Modo manual: el sistema puede emitir advertencias cl&iacute;nicas sin bloquear la generaci&oacute;n."
-                  : "Modo guiado: ajusta el reparto respecto al c&aacute;lculo base del motor seg&uacute;n estilo y preferencias."}
+                  ? "Modo manual: el sistema puede emitir advertencias clínicas sin bloquear la generación."
+                  : "Modo guiado: ajusta el reparto respecto al cálculo base del motor según estilo y preferencias."}
               </p>
             )}
           </div>
@@ -634,8 +632,8 @@ export default function Diets() {
             patientsCount === 0
               ? "Debe registrar al menos un paciente antes de crear una dieta."
               : patientIdFilter != null
-                ? "Este paciente no tiene dietas generadas a&uacute;n."
-                : "No hay dietas generadas a&uacute;n. Crea una nueva usando el formulario."
+                ? "Este paciente no tiene dietas generadas aún."
+                : "No hay dietas generadas aún. Crea una nueva usando el formulario."
           }
           action={
             !formOpen ? (

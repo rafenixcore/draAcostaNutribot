@@ -6,10 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+- `/auth/refresh` raised `NameError` (HTTP 500) because `sha256`, `decode_access_token`, `datetime` and `timezone` were used without being imported
+- CI: `tests/test_config_railway_db_url.py` imported `ensure_railway_tcp_proxy_ssl`, a function that never existed, which aborted pytest collection for the whole suite. The module now tests the URL normalisation that actually exists. (The proposed `sslmode` suffix was deliberately not implemented: SQLAlchemy's asyncpg dialect does not know that parameter and would forward it to `asyncpg.connect()`.)
+- CI: `ruff`, `eslint` and `tsc` failures across backend and frontend (unused variables, unsorted imports, exception chaining, `capture_output`)
+
 ### Changed
 - Translated all documentation to English (README, ARCHITECTURE.md)
 - Added CONTRIBUTING.md, CHANGELOG.md, SECURITY.md
 - Renamed project branding from Nutribot to Nutrisoft
+- `backend/pyproject.toml` is now versioned so CI lints with the same rules as local runs
 
 ### Fixed
 - Standardized API response keys from Spanish to English (audit log)

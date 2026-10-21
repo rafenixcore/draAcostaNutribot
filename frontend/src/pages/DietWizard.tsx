@@ -5,7 +5,6 @@ import {
   initialWizardState,
   NEXT_FEATURES,
   type WizardStep,
-  type WizardState,
 } from "../types"
 import type { DietGenerateRequest, DietStrategyMode, MealsPerDay, Patient } from "../types"
 import { useDietGeneration } from "../hooks/useDietGeneration"

@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 
 from app.services.email_service import send_email_sync
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 

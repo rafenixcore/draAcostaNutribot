@@ -281,7 +281,6 @@ export default function AdminLayout() {
 }
 
 function DesktopSidebar({
-  doctor,
   navItems,
   isActive,
   handleLogout,

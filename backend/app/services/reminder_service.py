@@ -1,15 +1,15 @@
 import base64
-import secrets
 import logging
+import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.models import Diet, DietReminder, Patient, PatientIntakeLink
 from app.services.email_service import send_email_sync
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from app.logic.profile import norm
 from app.models import Patient, PatientMetrics, PatientProfile
@@ -8,8 +8,8 @@ def diet_generation_blockers(
     patient: Patient,
     profile: Optional[PatientProfile],
     latest: Optional[PatientMetrics],
-) -> List[str]:
-    reasons: List[str] = []
+) -> list[str]:
+    reasons: list[str] = []
     if patient.deleted_at:
         reasons.append("El paciente ha sido eliminado")
     if not patient.birth_date:

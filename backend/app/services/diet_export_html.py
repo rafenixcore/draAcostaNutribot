@@ -20,7 +20,6 @@ from app.services.plan_meals import (
     resolve_plan_meal_slots,
 )
 
-
 ROOT = Path(__file__).resolve().parents[2]
 LOGO_PATH = ROOT / "assets" / "logo_nitido.png"
 PDF_TMP_ROOT = ROOT / ".tmp_pdf"
@@ -398,8 +397,7 @@ def html_to_pdf_bytes(html: str) -> bytes:
         completed = subprocess.run(
             cmd,
             check=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=30,
         )
         if completed.returncode != 0 or not pdf_path.exists():

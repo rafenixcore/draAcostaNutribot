@@ -1,5 +1,3 @@
-import Button from "../ui/Button"
-
 const ADJUSTMENTS: { key: string; label: string }[] = [
   { key: "more_prot", label: "Más proteína" },
   { key: "less_cal", label: "Menos calorías" },

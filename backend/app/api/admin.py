@@ -1,6 +1,8 @@
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,8 +10,6 @@ from app.api.deps import get_current_admin
 from app.core.database import get_db
 from app.core.security import get_password_hash
 from app.models import AuditLog, Doctor, utcnow
-import secrets
-
 from app.schemas import (
     AdminDoctorCreate,
     AdminDoctorCreateResponse,
@@ -68,7 +68,7 @@ async def setup_initial_admin(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered.",
-        )
+        ) from None
     await db.refresh(doctor)
     return {
         "message": "Admin account created successfully. Remove /api/admin/setup now.",
@@ -137,7 +137,7 @@ async def create_doctor(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
-        )
+        ) from None
     await db.refresh(doctor)
     await _log_admin_action(db, admin,
         f"Creó el usuario {doctor.full_name} ({doctor.role})",
@@ -197,7 +197,7 @@ async def update_doctor(
         count = await db.execute(
             select(func.count()).select_from(Doctor).where(
                 Doctor.role.in_(["admin", "super_admin"]),
-                Doctor.is_active == True,
+                Doctor.is_active.is_(True),
             )
         )
         if count.scalar_one() <= 1:
@@ -219,7 +219,7 @@ async def update_doctor(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
-        )
+        ) from None
     await db.refresh(doctor)
     # Generate a human-readable action description
     if "is_active" in data:
@@ -303,9 +303,9 @@ async def list_audit_logs(
     logs = result.scalars().all()
 
     # Enrich with admin and target info
-    admin_ids = {l.doctor_id for l in logs}
+    admin_ids = {log.doctor_id for log in logs}
     admins = {d.id: d for d in (await db.execute(select(Doctor).where(Doctor.id.in_(admin_ids)))).scalars()} if admin_ids else {}
-    target_ids = {l.entity_id for l in logs if l.entity_id}
+    target_ids = {log.entity_id for log in logs if log.entity_id}
     targets = {d.id: d for d in (await db.execute(select(Doctor).where(Doctor.id.in_(target_ids)))).scalars()} if target_ids else {}
 
     return [

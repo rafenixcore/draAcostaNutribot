@@ -34,7 +34,6 @@ from app.services.diet_service import (
 )
 from app.services.email_service import send_email_with_attachment
 
-
 router = APIRouter()
 
 
@@ -397,7 +396,7 @@ async def email_diet_pdf(
 
     # Build email
     patient_name = (patient.first_name or "Paciente").strip()
-    subject = f"Tu Plan Nutricional - Dra. Acosta"
+    subject = "Tu Plan Nutricional - Dra. Acosta"
     html_body = f"""<html><body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
 <h2 style="color:#1e3a5f">Hola {patient_name},</h2>
 <p>La <strong>Dra. Acosta</strong> te comparte tu plan nutricional personalizado.</p>

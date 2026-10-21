@@ -4,7 +4,7 @@ type Props = {
   onNext: () => void
 }
 
-export default function ManualTargets({ kcal, protein, carbs, fat, onChange, onNext }: Props) {
+export default function ManualTargets({ kcal, protein, carbs, fat, onChange }: Props) {
   const fields = [
     { field: "manualKcal", label: "Calorías diarias (kcal)", value: kcal, placeholder: "1800" },
     { field: "manualProteinG", label: "Proteína (g/día)", value: protein, placeholder: "135" },
